@@ -30,8 +30,8 @@ class Dog(models.Model):
 
 
 class UserDog(models.Model):
-    user = models.CharField(max_length=255, unique=True, blank=True)
-    dog = models.ForeignKey(Dog, related_name='user_dog')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    dog = models.ForeignKey(Dog, on_delete=models.CASCADE)
     status =models.CharField(
         max_length = 2,
         choices = [
@@ -43,7 +43,7 @@ class UserDog(models.Model):
 
 
 class UserPref(models.Model):
-    user = models.ForeignKey(User, related_name='user_pref')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     age = models.CharField(
         max_length = 4,
         choices = [
