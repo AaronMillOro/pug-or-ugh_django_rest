@@ -10,15 +10,19 @@ from . import views
 
 # API endpoints
 urlpatterns = format_suffix_patterns([
+    # User endpoints
     url(r'^api/user/login/$', obtain_auth_token, name='login-user'),
     url(r'^api/user/$', UserRegisterView.as_view(), name='register-user'),
-    url(r'^api/user/preferences/$', views.UserPreferencesView.as_view(),
-        name='user_preferences'),
+    url(r'^api/user/preferences/$', views.UserPrefView, name='user_prefer'),
+    # Never use 'as_view()'' with viewsets
+    # Dogs endpoints
     url(r'^api/dogs/$', views.ListDogsView.as_view(), name='list_dogs'),
+    # favicon
     url(r'^favicon\.ico$',
         RedirectView.as_view(
             url='/static/icons/favicon.ico',
             permanent=True
         )),
+    # index
     url(r'^$', TemplateView.as_view(template_name='index.html'))
 ])

@@ -1,0 +1,5 @@
+DFAULT SUPERUSER
+----------------------------------------------------
+User = pepito
+Password = password
+Token = d689d76d53916791e7b25989e1c8a36203f38291
