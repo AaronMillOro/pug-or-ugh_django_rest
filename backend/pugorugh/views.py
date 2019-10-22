@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-#from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import (CreateAPIView, ListAPIView,
@@ -39,5 +39,13 @@ class UserPrefView(RetrieveUpdateAPIView):
     permission_classes = (permissions.AllowAny,)
     queryset = models.UserPref.objects.all()
     serializer_class = serializers.UserPrefSerializer
+    lookup_field = None
 
-    
+    def get_object(self):
+        user = self.request.user
+        try:
+            user_pref = models.UserPref.objects.get(user_id=user.id)
+        except models.UserPref.DoesNotExist:
+            user_pref = models.UserPref.objects.create(user=user)
+
+        return user_pref

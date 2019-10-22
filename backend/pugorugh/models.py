@@ -1,6 +1,5 @@
-# from django.contrib.auth.models import User
+from django.contrib.auth.models import User
 from django.db import models
-from django.conf import settings
 
 
 class Dog(models.Model):
@@ -20,9 +19,7 @@ class Dog(models.Model):
 
 
 class UserDog(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     dog = models.ForeignKey(Dog, on_delete=models.CASCADE)
     status = models.CharField(
         max_length=2,
@@ -32,23 +29,21 @@ class UserDog(models.Model):
 
 
 class UserPref(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     age = models.CharField(
         max_length=4,
         choices=[('b', 'Baby'), ('y', 'Young'),
                  ('a', 'Adult'), ('s', 'Senior')],
-        blank=True
+        default='b'
     )
     gender = models.CharField(
         max_length=2,
         choices=[('m', 'Male'), ('f', 'Female')],
-        blank=True
+        default='f'
     )
     size = models.CharField(
         max_length=4,
         choices=[('s', 'Small'), ('m', 'Medium'),
                  ('l', 'Large'), ('xl', 'Extra large')],
-        blank=True
+        default='xl'
     )
