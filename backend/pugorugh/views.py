@@ -101,28 +101,26 @@ def get_single_dog(dogs_query, pk):
     try:
         dog = dogs_query.filter(id=pk).get()
     except DoesNotExist:
-        dog = dogs.first()
+        dog = dogs_query.first()
     return dog
 
 
 def convert_dog_age(prefered_age):
     """
     Inspection of data range showed a dogs age between  2 and 96 months
-    This function changes the selected preference into numerical range
+    This function changes the selected preference into numerical ranges
     """
+    prefered_age = prefered_age.split(",")
     dog_age = []
-    if "b" in prefered_age:
-        dog_age = list(range(1,11))
-    elif "y" in prefered_age:
-        dog_age = list(range(11,30))
-    elif "a" in prefered_age:
-        dog_age = list(range(30,70))
-    elif "s" in prefered_age:
-        dog_age = list(range(70,100))
-    else:
-        print("Invalid code. Try again!")
-        dog_age = list(range(1,11))
-        # Default value (baby) is sent
+    for item in prefered_age:
+        if item == "b":
+            dog_age = [x for x in range(1,11)]
+        elif item == "y":
+            dog_age += [x for x in range(11,30)]
+        elif item == "a":
+            dog_age += [x for x in range(30,70)]
+        elif item == "s":
+            dog_age += [x for x in range(70,100)]
     return dog_age
 
 """
