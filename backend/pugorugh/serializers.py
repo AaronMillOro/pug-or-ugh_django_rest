@@ -26,14 +26,8 @@ class DogSerializer(serializers.ModelSerializer):
         model = models.Dog
 
 
-class UserDogSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ('user', 'dog', 'status')
-        model = models.UserDog
-
-
 class UserPrefSerializer(serializers.ModelSerializer):
     class Meta:
-        exclude = ['user']
-        #fields = ('age', 'gender', 'size')
+        #exclude = ['user']
+        fields = ('age', 'gender', 'size')
         model = models.UserPref
