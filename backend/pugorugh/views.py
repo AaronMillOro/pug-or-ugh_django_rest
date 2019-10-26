@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404
 
 from rest_framework import mixins, permissions, status, viewsets
@@ -60,9 +62,9 @@ class ListDogsView(ListAPIView):
         user = self.request.user
         preferences = models.UserPref.objects.get(user=user.id)
         dogs = models.Dog.objects.filter(
-            age__in=convert_dog_age(preferences.age),
             gender__in=preferences.gender,
             size__in=preferences.size,
+            age__in=convert_dog_age(preferences.age),
         )
         return dogs
 
@@ -80,28 +82,33 @@ class RetrieveChangeStatus(RetrieveAPIView):
     lookup_field = None
 
     def get_queryset(self):
+        """ Retrieve all dogs based on chosen preferences """
         user = self.request.user
-        preferences = models.UserPref.objects.get(user_id=user.id)
+        preferences = models.UserPref.objects.get(user=user.id)
         dogs = models.Dog.objects.filter(
-            age__in=convert_dog_age(preferences.age),
             gender__in=preferences.gender,
             size__in=preferences.size,
+            age__in=convert_dog_age(preferences.age),
         )
         return dogs
 
     def get_object(self):
+        """ Get one dog to display and assign undefined status by default """
+        user = self.request.user
         pk = self.kwargs.get('pk')
         dogs = self.get_queryset()
         dog = get_single_dog(dogs, pk)
+        user_dog, created = models.UserDog.objects.get_or_create(
+            user=user, dog=dog, status='u')
         return dog
 
 
 def get_single_dog(dogs_query, pk):
-    """ Loop through the query of dogs """
+    """ Look through the query of dogs """
     try:
         dog = dogs_query.filter(id=pk).get()
-    except DoesNotExist:
-        dog = dogs_query.first()
+    except ObjectDoesNotExist:
+        raise Http404
     return dog
 
 
@@ -122,54 +129,3 @@ def convert_dog_age(prefered_age):
         elif item == "s":
             dog_age += [x for x in range(70,100)]
     return dog_age
-
-"""
-class RetrieveDogView(generics.RetrieveAPIView):
-    queryset = Dog.objects.all()
-    serializer_class = DogSerializer
-
-    def get_queryset(self):
-        decision = self.kwargs.get('decision')
-
-        preference = UserPref.objects.get(
-            user=self.request.user)
-
-        user_dog_queryset = UserDog.objects.filter(user=self.request.user)
-
-        queryset = self.queryset.filter(
-            age__in=preferred_dog_age(preference.age),
-            gender__in=preference.gender,
-            size__in=preference.size,
-        )
-
-        if decision == 'liked' or decision == 'disliked':
-            dogs = queryset.filter(
-                userdog__in=user_dog_queryset,
-                userdog__status=decision[0]
-            )
-        else:
-            dogs = queryset.filter(
-                ~Q(userdog__in=user_dog_queryset) | Q(userdog__status='u')
-            )
-
-        return dogs
-
-    def get_object(self):
-        pk = self.kwargs.get('pk')
-        queryset = self.get_queryset()
-        dog = retrieve_single_dog(queryset, pk)
-
-        if not dog:
-            raise Http404
-
-        return dog
-
-
-def retrieve_single_dog(dogs, pk):
-    Retrieve single dog and loop back when user went through all dogs.
-    try:
-        dog = dogs.filter(id__gt=pk)[:1].get()
-    except ObjectDoesNotExist:
-        dog = dogs.first()
-    return dog
-"""
