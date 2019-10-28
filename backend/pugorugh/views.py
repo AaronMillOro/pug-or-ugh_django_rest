@@ -1,16 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, Http404
-from django.shortcuts import get_object_or_404
 
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import (CreateAPIView, ListAPIView,
-                                    RetrieveAPIView, RetrieveDestroyAPIView,
-                                    RetrieveUpdateAPIView)
+                                    RetrieveAPIView, RetrieveUpdateAPIView)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-#from rest_framework.views import APIView
 
 from . import serializers
 from . import models
@@ -186,14 +183,21 @@ class RetrieveStatus(ListAPIView):
     lookup_field = None
 
     def get_queryset(self):
-        """ Retrieve all dogs based on chosen preferences """
+        """ Retrieve undecided dogs """
         user = self.request.user
-        preferences = models.UserPref.objects.get(user=user.id)
-        dogs = models.Dog.objects.filter(
-            gender__in=preferences.gender.split(','),
-            size__in=preferences.size.split(','),
-            age__in=convert_dog_age(preferences.age),
-        )
+        status = self.kwargs.get('status')
+        
+        if status == 'undecided':
+            user_dog = models.UserDog.objects.filter(user=user.id, status='u')
+        elif status == 'liked':
+            user_dog = models.UserDog.objects.filter(user=user.id, status='l')
+        elif status == 'disliked':
+            user_dog = models.UserDog.objects.filter(user=user.id, status='d')
+        else:
+            raise Http404
+
+        list_dogs = [dog.dog_id for dog in user_dog]
+        dogs = models.Dog.objects.filter(id__in=list_dogs,)
         return dogs
 """
     def get_object(self):
@@ -208,9 +212,8 @@ class RetrieveStatus(ListAPIView):
         status = self.kwargs.get('status')
         dogs = self.get_queryset()
         dog = get_single_dog(dogs, pk)
-"""
 
-"""
+
     def get_queryset(self):
         user = self.request.user
         status = self.kwargs.get('status')
