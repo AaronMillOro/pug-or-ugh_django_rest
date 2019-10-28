@@ -111,7 +111,7 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
         pk = self.kwargs.get('pk')
         status = self.kwargs.get('status')
         dogs = self.get_queryset()
-        dog = get_single_dog(dogs, pk)
+        dog = get_single_dog(dogs)
 
         #/api/dog/<pk>/undecided/
         if status == 'undecided':
@@ -145,13 +145,13 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
         return dog
 
 
-def get_single_dog(dogs_query, pk):
+def get_single_dog(dogs_query):
     """
     Look through the query of dogs and return ONE dog
     Unless the dog is not present in the queryset
     """
     try:
-        dog = dogs_query.filter(id=pk).get()
+        dog = dogs_query.all().first()
     except ObjectDoesNotExist:
         raise Http404
     return dog
@@ -205,5 +205,5 @@ class RetrieveStatus(RetrieveAPIView):
         user = self.request.user
         pk = self.kwargs.get('pk')
         dogs = self.get_queryset()
-        dog = get_single_dog(dogs, pk)
+        dog = get_single_dog(dogs)
         return dog
