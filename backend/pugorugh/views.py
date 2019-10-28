@@ -78,7 +78,7 @@ class ListDogsView(ListAPIView):
         return dogs
 
 
-#/api/dog/<pk>/<status>/next/
+#/api/dog/<pk>/<status>/
 class RetrieveChangeStatus(RetrieveUpdateAPIView):
     #permission_classes = (IsAuthenticated,)
     #authentication_classes = (TokenAuthentication,)
@@ -113,7 +113,7 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
         dogs = self.get_queryset()
         dog = get_single_dog(dogs, pk)
 
-        #/api/dog/<pk>/undecided/next/
+        #/api/dog/<pk>/undecided/
         if status == 'undecided':
             try:
                 user_dog = models.UserDog.objects.get(user=user, dog=dog)
@@ -122,7 +122,7 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
             except ObjectDoesNotExist:
                 user_dog = models.UserDog.objects.create(user=user, dog=dog)
 
-        #/api/dog/<pk>/liked/next/
+        #/api/dog/<pk>/liked/
         elif status == 'liked':
             try:
                 user_dog = models.UserDog.objects.get(user=user, dog=dog)
@@ -132,7 +132,7 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
                 user_dog = models.UserDog.objects.create(
                     user=user, dog=dog, status='l')
 
-        #/api/dog/<pk>/disliked/next/
+        #/api/dog/<pk>/disliked/
         elif status == 'disliked':
             try:
                 user_dog = models.UserDog.objects.get(user=user, dog=dog)
@@ -146,7 +146,10 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
 
 
 def get_single_dog(dogs_query, pk):
-    """ Look through the query of dogs and return ONE dog"""
+    """
+    Look through the query of dogs and return ONE dog
+    Unless the dog is not present in the queryset
+    """
     try:
         dog = dogs_query.filter(id=pk).get()
     except ObjectDoesNotExist:
@@ -173,8 +176,8 @@ def convert_dog_age(prefered_age):
     return dog_age
 
 
-#/api/dog/<pk>/undecided/
-class RetrieveStatus(ListAPIView):
+#/api/dog/<pk>/<status>/next/
+class RetrieveStatus(RetrieveAPIView):
     #permission_classes = (IsAuthenticated,)
     #authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.AllowAny,)
@@ -186,7 +189,6 @@ class RetrieveStatus(ListAPIView):
         """ Retrieve undecided dogs """
         user = self.request.user
         status = self.kwargs.get('status')
-        
         if status == 'undecided':
             user_dog = models.UserDog.objects.filter(user=user.id, status='u')
         elif status == 'liked':
@@ -195,39 +197,13 @@ class RetrieveStatus(ListAPIView):
             user_dog = models.UserDog.objects.filter(user=user.id, status='d')
         else:
             raise Http404
-
         list_dogs = [dog.dog_id for dog in user_dog]
         dogs = models.Dog.objects.filter(id__in=list_dogs,)
         return dogs
-"""
-    def get_object(self):
-
-        Get one dog to display and assign one of the diffent status:
-        undecided, liked or disliked
-        The queryset will be obtained in function of the User preferences
-        No dog can be repeated in the UserDog model
-
-        user = self.request.user
-        pk = self.kwargs.get('pk')
-        status = self.kwargs.get('status')
-        dogs = self.get_queryset()
-        dog = get_single_dog(dogs, pk)
-
-
-    def get_queryset(self):
-        user = self.request.user
-        status = self.kwargs.get('status')
-        if status == 'undecided':
-            user_dog = models.UserDog.objects.filter(user=user, status='u')
-        elif status == 'liked':
-            user_dog = models.UserDog.objects.filter(user=user, status='l')
-        elif status == 'disliked':
-            user_dog = models.UserDog.objects.filter(user=user, status='d')
-        return user_dog
 
     def get_object(self):
+        user = self.request.user
         pk = self.kwargs.get('pk')
         dogs = self.get_queryset()
         dog = get_single_dog(dogs, pk)
         return dog
-"""
