@@ -25,9 +25,8 @@ urlpatterns = format_suffix_patterns([
         name='user_prefer'),
 
     # Dogs endpoints
-    url(r'^api/dogs/$', views.ListDogsView.as_view(), 
+    url(r'^api/dogs/$', views.ListDogsView.as_view(),
         name='list_dogs'),
-    url(r'^api/dog/(?P<pk>\d+)/undecided/$',
-        views.RetrieveChangeStatus.as_view(),
-        name='retrive_undecided'),
+    url(r'^api/dog/(?P<pk>\d+)/(?P<status>liked|disliked|undecided)/next/$',
+        views.RetrieveChangeStatus.as_view(), name='change_status'),
 ])

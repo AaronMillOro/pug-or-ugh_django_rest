@@ -30,8 +30,3 @@ class UserPrefSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('age', 'gender', 'size')
         model = models.UserPref
-
-class UserDogSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ('dog', 'status')
-        model = models.UserDog

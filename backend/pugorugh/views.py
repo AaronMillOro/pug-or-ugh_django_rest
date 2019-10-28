@@ -49,7 +49,7 @@ class UserPrefView(RetrieveUpdateAPIView):
 #/api/dogs/
 class ListDogsView(ListAPIView):
     """
-    View to inspect all the dogs present in the DB
+    View to inspect all the dogs present in queryset
     """
     #permission_classes = (IsAuthenticated,)
     #authentication_classes = (TokenAuthentication,)
@@ -69,8 +69,8 @@ class ListDogsView(ListAPIView):
         return dogs
 
 
-#/api/dog/<pk>/undecided/
-class RetrieveChangeStatus(RetrieveAPIView):
+#/api/dog/<pk>/<status>/next
+class RetrieveChangeStatus(RetrieveUpdateAPIView):
     """
     Create or retrieve UserDog instance, default status = undecided
     """
@@ -93,18 +93,51 @@ class RetrieveChangeStatus(RetrieveAPIView):
         return dogs
 
     def get_object(self):
-        """ Get one dog to display and assign undefined status by default """
+        """
+        Get one dog to display and assign one of the diffent status:
+        undecided, liked or disliked
+        The queryset will be obtained in function of the User preferences
+        No dog can be repeated in the UserDog model
+        """
         user = self.request.user
         pk = self.kwargs.get('pk')
+        status = self.kwargs.get('status')
         dogs = self.get_queryset()
         dog = get_single_dog(dogs, pk)
-        user_dog, created = models.UserDog.objects.get_or_create(
-            user=user, dog=dog, status='u')
+
+        #/api/dog/<pk>/undecided/next
+        if status == 'undecided':
+            try:
+                user_dog = models.UserDog.objects.get(user=user, dog=dog)
+                user_dog.status = 'u'
+                user_dog.save()
+            except ObjectDoesNotExist:
+                user_dog = models.UserDog.objects.create(user=user, dog=dog)
+
+        #/api/dog/<pk>/liked/next
+        elif status == 'liked':
+            try:
+                user_dog = models.UserDog.objects.get(user=user, dog=dog)
+                user_dog.status = 'l'
+                user_dog.save()
+            except ObjectDoesNotExist:
+                    user_dog = models.UserDog.objects.create(
+                        user=user, dog=dog, status='l')
+
+        #/api/dog/<pk>/disliked/next
+        elif status == 'disliked':
+            try:
+                user_dog = models.UserDog.objects.get(user=user, dog=dog)
+                user_dog.status = 'd'
+                user_dog.save()
+            except ObjectDoesNotExist:
+                    user_dog = models.UserDog.objects.create(
+                        user=user, dog=dog, status='d')
         return dog
 
 
 def get_single_dog(dogs_query, pk):
-    """ Look through the query of dogs """
+    """ Look through the query of dogs and return ONE dog"""
     try:
         dog = dogs_query.filter(id=pk).get()
     except ObjectDoesNotExist:

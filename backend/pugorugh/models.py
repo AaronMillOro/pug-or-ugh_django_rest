@@ -11,7 +11,7 @@ class Dog(models.Model):
         choices=[('m', 'Male'), ('f', 'Female'), ('u', 'Unknown')]
     )
     size = models.CharField(
-        max_length=1,
+        max_length=2,
         choices=[('s', 'Small'), ('m', 'Medium'), ('l', 'Large'),
                  ('xl', 'Extra large'), ('u', 'Unknown')]
     )
@@ -41,7 +41,7 @@ class UserPref(models.Model):
         default='f'
     )
     size = models.CharField(
-        max_length=8,
+        max_length=9,
         #choices=[('s', 'Small'), ('m', 'Medium'),
         #         ('l', 'Large'), ('xl', 'Extra large')],
         default='xl'
