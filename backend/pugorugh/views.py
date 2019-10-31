@@ -108,10 +108,10 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
         No dog can be repeated in the UserDog model
         """
         user = self.request.user
-        pk = self.kwargs.get('pk')
+        pk = int(self.kwargs.get('pk'))
         status = self.kwargs.get('status')
         dogs = self.get_queryset()
-        dog = get_single_dog(dogs)
+        dog = get_single_dog2(dogs, pk)
 
         #/api/dog/<pk>/undecided/
         if status == 'undecided':
@@ -143,18 +143,6 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
                     user=user, dog=dog, status='d')
 
         return dog
-
-
-def get_single_dog(dogs_query):
-    """
-    Look through the query of dogs and return ONE dog
-    Unless the dog is not present in the queryset
-    """
-    try:
-        dog = dogs_query.all().first()
-    except ObjectDoesNotExist:
-        raise Http404
-    return dog
 
 
 def convert_dog_age(prefered_age):
@@ -198,12 +186,24 @@ class RetrieveStatus(RetrieveAPIView):
         else:
             raise Http404
         list_dogs = [dog.dog_id for dog in user_dog]
-        dogs = models.Dog.objects.filter(id__in=list_dogs,)
+        dogs = models.Dog.objects.filter(id__in=list_dogs,).order_by('id')
         return dogs
 
     def get_object(self):
         user = self.request.user
-        pk = self.kwargs.get('pk')
+        pk = int(self.kwargs.get('pk'))
         dogs = self.get_queryset()
-        dog = get_single_dog(dogs)
+        dog = get_single_dog2(dogs, pk)
+        print(pk, dog.id, dogs, dog)
         return dog
+
+
+def get_single_dog2(dogs_query, pk):
+    if len(dogs_query) > 1:
+        try:
+            dog = dogs_query.filter(id__gt=pk).first()
+        except ObjectDoesNotExist:
+            dog = dogs_query.first()
+    else:
+        dog = dogs_query.first()
+    return dog
