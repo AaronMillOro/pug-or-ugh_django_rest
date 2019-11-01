@@ -5,7 +5,8 @@ from django.http import HttpResponse, Http404
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import (CreateAPIView, ListAPIView,
-                                    RetrieveAPIView, RetrieveUpdateAPIView)
+                                     RetrieveUpdateAPIView, RetrieveAPIView,
+                                     UpdateAPIView)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -22,13 +23,8 @@ class UserRegisterView(CreateAPIView):
 # api/user/preferences/
 class UserPrefView(RetrieveUpdateAPIView):
     """
-    User preferences allowing to do GET, POST and PUT
-    Choose at least one of each category.
-    age : Baby(b), Young(y), Adult(a) and Senior(s)
-    gender : Male(m) and Female(f)
-    size : Small(s), Medium(m), Large(l) and Extra large(xl)
-    Each time preferences are set the UserDog instances are reseted
-    for the current user
+    Get and update User preferences
+    Each time preferences are set UserDog instances are reseted
     """
     #permission_classes = (IsAuthenticated,)
     #authentication_classes = (TokenAuthentication,)
@@ -65,7 +61,6 @@ class ListDogsView(ListAPIView):
     permission_classes = (permissions.AllowAny,)
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
-    lookup_field = None
 
     def get_queryset(self):
         user = self.request.user
@@ -78,6 +73,77 @@ class ListDogsView(ListAPIView):
         return dogs
 
 
+def convert_dog_age(prefered_age):
+    """
+    Inspection of data range showed a dogs age between  2 and 96 months
+    This function changes the selected preference into numerical ranges
+    """
+    prefered_age = prefered_age.split(',')
+    dog_age = []
+    for item in prefered_age:
+        if item == 'b':
+            dog_age = [x for x in range(1,11)]
+        elif item == 'y':
+            dog_age += [x for x in range(11,30)]
+        elif item == 'a':
+            dog_age += [x for x in range(30,70)]
+        elif item == 's':
+            dog_age += [x for x in range(70,100)]
+    return dog_age
+
+
+def get_single_dog(dogs_query, dog_id):
+    """ Function to view through dogs query and get ONE dog """
+    dog = dogs_query.filter(id__gt=dog_id).first()
+    if dog is not None:
+        return dogs_query.first()
+    else:
+        return dog
+
+
+#/api/dog/<pk>/<status>/next/
+class RetrieveNextDog(RetrieveAPIView):
+    #permission_classes = (IsAuthenticated,)
+    #authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.AllowAny,)
+    queryset = models.Dog.objects.all()
+    serializer_class = serializers.DogSerializer
+
+    def get_queryset(self):
+        """ Filterd dogs by User Preferences the by UserDog status """
+        user = self.request.user
+        preferences = models.UserPref.objects.get(user=user.id)
+        dogs = models.Dog.objects.filter(
+            gender__in=preferences.gender.split(','),
+            size__in=preferences.size.split(','),
+            age__in=convert_dog_age(preferences.age))
+        status = self.kwargs.get('status')
+        if status == 'undecided':
+            dogs = dogs.filter(userdog__status__exact='u').order_by('pk')
+        elif status == 'liked':
+            dogs = dogs.filter(userdog__status__exact='l').order_by('pk')
+        else:
+            dogs = dogs.filter(userdog__status__exact='d').order_by('pk')
+        return dogs
+
+    def get_object(self):
+        dog_id = self.kwargs.get('pk')
+        dogs = self.get_queryset()
+        # Check if queryset is empty
+        if not dogs:
+            raise Http404
+        dog = self.get_queryset().filter(id__gt=dog_id).first()
+        if dog is not None:
+            return dog
+        else:
+            dog = self.get_queryset().first()
+            return dog
+
+        #list_ids = [item.pk for item in dogs] # generate list of ids
+        #next_dog = dogs.only('pk').order_by('?').first()
+        #print(list_ids)
+
+
 #/api/dog/<pk>/<status>/
 class RetrieveChangeStatus(RetrieveUpdateAPIView):
     #permission_classes = (IsAuthenticated,)
@@ -85,12 +151,8 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
     permission_classes = (permissions.AllowAny,)
     queryset = models.Dog.objects.all()
     serializer_class = serializers.DogSerializer
-    lookup_field = None
 
     def get_queryset(self):
-        """
-        Retrieve dogs based on chosen preferences
-        """
         user = self.request.user
         preferences = models.UserPref.objects.get(user=user.id)
         dogs = models.Dog.objects.filter(
@@ -101,17 +163,20 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
         return dogs
 
     def get_object(self):
-        """
-        Get one dog to display and assign one of the diffent status:
-        undecided, liked or disliked
-        The queryset will be obtained in function of the User preferences
-        No dog can be repeated in the UserDog model
-        """
         user = self.request.user
-        pk = int(self.kwargs.get('pk'))
-        status = self.kwargs.get('status')
+        dog_id = self.kwargs.get('pk')
         dogs = self.get_queryset()
-        dog = get_single_dog2(dogs, pk)
+        # Check if queryset is empty
+        if not dogs:
+            raise Http404
+        dog = self.get_queryset().filter(id__gt=dog_id).first()
+        if dog is not None:
+            return dog
+        else:
+            dog = self.get_queryset().first()
+            return dog
+
+        status = self.kwargs.get('status')
 
         #/api/dog/<pk>/undecided/
         if status == 'undecided':
@@ -144,25 +209,7 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
 
         return dog
 
-
-def convert_dog_age(prefered_age):
-    """
-    Inspection of data range showed a dogs age between  2 and 96 months
-    This function changes the selected preference into numerical ranges
-    """
-    prefered_age = prefered_age.split(',')
-    dog_age = []
-    for item in prefered_age:
-        if item == 'b':
-            dog_age = [x for x in range(1,11)]
-        elif item == 'y':
-            dog_age += [x for x in range(11,30)]
-        elif item == 'a':
-            dog_age += [x for x in range(30,70)]
-        elif item == 's':
-            dog_age += [x for x in range(70,100)]
-    return dog_age
-
+"""
 
 #/api/dog/<pk>/<status>/next/
 class RetrieveStatus(RetrieveAPIView):
@@ -174,7 +221,6 @@ class RetrieveStatus(RetrieveAPIView):
     lookup_field = None
 
     def get_queryset(self):
-        """ Retrieve undecided dogs """
         user = self.request.user
         status = self.kwargs.get('status')
         if status == 'undecided':
@@ -207,3 +253,4 @@ def get_single_dog2(dogs_query, pk):
     else:
         dog = dogs_query.first()
     return dog
+"""

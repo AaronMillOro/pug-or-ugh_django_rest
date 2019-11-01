@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
+
 class Dog(models.Model):
     name = models.CharField(max_length=255, blank=True)
     image_filename = models.CharField(max_length=255)
@@ -16,6 +17,9 @@ class Dog(models.Model):
                  ('xl', 'Extra large'), ('u', 'Unknown')]
     )
 
+    def __str__(self):
+        return self.name
+
 
 class UserDog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -29,20 +33,6 @@ class UserDog(models.Model):
 
 class UserPref(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    age = models.CharField(
-        max_length=8,
-        #choices=[('b', 'Baby'), ('y', 'Young'),
-        #         ('a', 'Adult'), ('s', 'Senior')],
-        default='b'
-    )
-    gender = models.CharField(
-        max_length=4,
-        #choices=[('m', 'Male'), ('f', 'Female')],
-        default='f'
-    )
-    size = models.CharField(
-        max_length=9,
-        #choices=[('s', 'Small'), ('m', 'Medium'),
-        #         ('l', 'Large'), ('xl', 'Extra large')],
-        default='xl'
-    )
+    age = models.CharField(max_length=8, default='b')
+    gender = models.CharField(max_length=4, default='f')
+    size = models.CharField(max_length=9, default='xl')

@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
-
 from . import models
 
 
@@ -22,7 +21,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 class DogSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('name', 'image_filename', 'breed', 'age', 'gender', 'size')
+        fields = ('id', 'name', 'image_filename',
+                  'breed', 'age', 'gender', 'size'
+        )
         model = models.Dog
 
 
