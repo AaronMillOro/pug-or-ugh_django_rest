@@ -25,6 +25,7 @@ class UserPrefView(RetrieveUpdateAPIView):
     """
     Get and update User preferences
     Each time preferences are set UserDog instances are reseted
+    and dogs have 'undecided' status by default
     """
     #permission_classes = (IsAuthenticated,)
     #authentication_classes = (TokenAuthentication,)
@@ -92,15 +93,6 @@ def convert_dog_age(prefered_age):
     return dog_age
 
 
-def get_single_dog(dogs_query, dog_id):
-    """ Function to view through dogs query and get ONE dog """
-    dog = dogs_query.filter(id__gt=dog_id).first()
-    if dog is not None:
-        return dogs_query.first()
-    else:
-        return dog
-
-
 #/api/dog/<pk>/<status>/next/
 class RetrieveNextDog(RetrieveAPIView):
     #permission_classes = (IsAuthenticated,)
@@ -110,7 +102,7 @@ class RetrieveNextDog(RetrieveAPIView):
     serializer_class = serializers.DogSerializer
 
     def get_queryset(self):
-        """ Filterd dogs by User Preferences the by UserDog status """
+        """ Filterd dogs by User Preferences then by UserDog status """
         user = self.request.user
         preferences = models.UserPref.objects.get(user=user.id)
         dogs = models.Dog.objects.filter(
@@ -138,14 +130,12 @@ class RetrieveNextDog(RetrieveAPIView):
         else:
             dog = self.get_queryset().first()
             return dog
-
         #list_ids = [item.pk for item in dogs] # generate list of ids
-        #next_dog = dogs.only('pk').order_by('?').first()
         #print(list_ids)
 
 
 #/api/dog/<pk>/<status>/
-class RetrieveChangeStatus(RetrieveUpdateAPIView):
+class RetrieveChangeStatus(UpdateAPIView):
     #permission_classes = (IsAuthenticated,)
     #authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.AllowAny,)
@@ -153,6 +143,7 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
     serializer_class = serializers.DogSerializer
 
     def get_queryset(self):
+        """ Get dogs that match preferences"""
         user = self.request.user
         preferences = models.UserPref.objects.get(user=user.id)
         dogs = models.Dog.objects.filter(
@@ -163,20 +154,20 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
         return dogs
 
     def get_object(self):
-        user = self.request.user
+        """ Get actual dog info """
         dog_id = self.kwargs.get('pk')
         dogs = self.get_queryset()
         # Check if queryset is empty
         if not dogs:
             raise Http404
-        dog = self.get_queryset().filter(id__gt=dog_id).first()
-        if dog is not None:
-            return dog
-        else:
-            dog = self.get_queryset().first()
-            return dog
+        dog = self.get_queryset().filter(id__exact=dog_id)
+        return dog
 
+    def put(self, request, *args, **kwargs):
+        """ Change status of selected dog """
         status = self.kwargs.get('status')
+        dog = self.get_object()
+        user = self.request.user
 
         #/api/dog/<pk>/undecided/
         if status == 'undecided':
@@ -206,51 +197,8 @@ class RetrieveChangeStatus(RetrieveUpdateAPIView):
             except ObjectDoesNotExist:
                 user_dog = models.UserDog.objects.create(
                     user=user, dog=dog, status='d')
-
-        return dog
-
+        return HttpResponse('')
 """
-
-#/api/dog/<pk>/<status>/next/
-class RetrieveStatus(RetrieveAPIView):
-    #permission_classes = (IsAuthenticated,)
-    #authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.AllowAny,)
-    queryset = models.Dog.objects.all()
-    serializer_class = serializers.DogSerializer
-    lookup_field = None
-
-    def get_queryset(self):
-        user = self.request.user
-        status = self.kwargs.get('status')
-        if status == 'undecided':
-            user_dog = models.UserDog.objects.filter(user=user.id, status='u')
-        elif status == 'liked':
-            user_dog = models.UserDog.objects.filter(user=user.id, status='l')
-        elif status == 'disliked':
-            user_dog = models.UserDog.objects.filter(user=user.id, status='d')
-        else:
-            raise Http404
-        list_dogs = [dog.dog_id for dog in user_dog]
-        dogs = models.Dog.objects.filter(id__in=list_dogs,).order_by('id')
-        return dogs
-
-    def get_object(self):
-        user = self.request.user
-        pk = int(self.kwargs.get('pk'))
-        dogs = self.get_queryset()
-        dog = get_single_dog2(dogs, pk)
-        print(pk, dog.id, dogs, dog)
-        return dog
-
-
-def get_single_dog2(dogs_query, pk):
-    if len(dogs_query) > 1:
-        try:
-            dog = dogs_query.filter(id__gt=pk).first()
-        except ObjectDoesNotExist:
-            dog = dogs_query.first()
-    else:
-        dog = dogs_query.first()
-    return dog
+        def get(self):
+            return next_dog
 """
