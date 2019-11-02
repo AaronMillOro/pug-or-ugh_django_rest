@@ -9,8 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = get_user_model().objects.create(
-            username=validated_data['username'],
-        )
+            username=validated_data['username'],)
         user.set_password(validated_data['password'])
         user.save()
         return user
@@ -22,8 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
 class DogSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'name', 'image_filename',
-                  'breed', 'age', 'gender', 'size'
-        )
+                  'breed', 'age', 'gender', 'size')
         model = models.Dog
 
 
