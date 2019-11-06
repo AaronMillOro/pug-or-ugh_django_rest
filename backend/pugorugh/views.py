@@ -38,15 +38,15 @@ class UserPrefView(RetrieveUpdateAPIView):
             user_pref = models.UserPref.objects.get(user=user.id)
         except models.UserPref.DoesNotExist:
             user_pref = models.UserPref.objects.create(user=user)
-        finally:
-            dogs = models.Dog.objects.filter(
-                gender__in=user_pref.gender.split(','),
-                size__in=user_pref.size.split(','),
-                age__in=convert_dog_age(user_pref.age),
-            )
-            models.UserDog.objects.filter(user=user).delete()
-            for dog in dogs:
-                user_dog = models.UserDog.objects.create(user=user, dog=dog)
+
+        dogs = models.Dog.objects.filter(
+            gender__in=user_pref.gender.split(','),
+            size__in=user_pref.size.split(','),
+            age__in=convert_dog_age(user_pref.age),
+        )
+        models.UserDog.objects.filter(user=user).delete()
+        for dog in dogs:
+            user_dog = models.UserDog.objects.create(user=user, dog=dog)
         return user_pref
 
 
@@ -95,11 +95,14 @@ class RetrieveNextDog(RetrieveAPIView):
             age__in=convert_dog_age(preferences.age))
         status = self.kwargs.get('status')
         if status == 'undecided':
-            dogs = dogs.filter(userdog__status__exact='u').order_by('pk')
+            dogs = dogs.filter(
+                userdog__status__exact='u', userdog__user=user.id)
         elif status == 'liked':
-            dogs = dogs.filter(userdog__status__exact='l').order_by('pk')
+            dogs = dogs.filter(
+                userdog__status__exact='l', userdog__user=user.id)
         else:
-            dogs = dogs.filter(userdog__status__exact='d').order_by('pk')
+            dogs = dogs.filter(
+                userdog__status__exact='d', userdog__user=user.id)
         return dogs
 
     def get_object(self):
@@ -108,8 +111,9 @@ class RetrieveNextDog(RetrieveAPIView):
         # Check if queryset is empty
         if not dogs:
             raise Http404
-        dog = get_single_dog(dogs, dog_id)
-        return dog
+        else:
+            dog = get_single_dog(dogs, dog_id)
+            return dog
 
 
 # /api/dog/<pk>/<status>/
@@ -127,7 +131,7 @@ class RetrieveChangeStatus(UpdateAPIView):
             gender__in=preferences.gender.split(','),
             size__in=preferences.size.split(','),
             age__in=convert_dog_age(preferences.age),
-        )
+        ).order_by('pk')
         return dogs
 
     def get_object(self):
@@ -151,49 +155,29 @@ class RetrieveChangeStatus(UpdateAPIView):
 
         # /api/dog/<pk>/undecided/
         if status == 'undecided':
-            try:
-                user_dog = models.UserDog.objects.get(user=user, dog=dog)
-                user_dog.status = 'u'
-                user_dog.save()
-                next_dog = get_single_dog(dogs, dog_id)
-                serializer = serializers.DogSerializer(next_dog)
-                return Response(serializer.data)
-            except ObjectDoesNotExist:
-                user_dog = models.UserDog.objects.create(user=user, dog=dog)
-                next_dog = get_single_dog(dogs, dog_id)
-                serializer = serializers.DogSerializer(next_dog)
-                return Response(serializer.data)
-
+            user_dog = models.UserDog.objects.get(user=user, dog=dog)
+            user_dog.status = 'u'
+            user_dog.save()
+            next_dog = get_single_dog(dogs, dog_id)
+            serializer = serializers.DogSerializer(next_dog)
+            return Response(serializer.data)
         # /api/dog/<pk>/liked/
         elif status == 'liked':
-            try:
-                user_dog = models.UserDog.objects.get(user=user, dog=dog)
-                user_dog.status = 'l'
-                user_dog.save()
-                next_dog = get_single_dog(dogs, dog_id)
-                serializer = serializers.DogSerializer(next_dog)
-                return Response(serializer.data)
-            except ObjectDoesNotExist:
-                user_dog = models.UserDog.objects.create(
-                    user=user, dog=dog, status='l')
-                next_dog = get_single_dog(dogs, dog_id)
-                serializer = serializers.DogSerializer(next_dog)
-                return Response(serializer.data)
-
+            user_dog = models.UserDog.objects.get(user=user, dog=dog)
+            user_dog.status = 'l'
+            user_dog.save()
+            next_dog = get_single_dog(dogs, dog_id)
+            serializer = serializers.DogSerializer(next_dog)
+            return Response(serializer.data)
         # /api/dog/<pk>/disliked/
         elif status == 'disliked':
-            try:
-                user_dog = models.UserDog.objects.get(user=user, dog=dog)
-                user_dog.status = 'd'
-                user_dog.save()
-                next_dog = get_single_dog(dogs, dog_id)
-                serializer = serializers.DogSerializer(next_dog)
-                return Response(serializer.data)
-            except ObjectDoesNotExist:
-                user_dog = models.UserDog.objects.create(
-                    user=user, dog=dog, status='d')
-                next_dog = get_single_dog(dogs, dog_id)
-                serializer = serializers.DogSerializer(next_dog)
-                return Response(serializer.data)
+            user_dog = models.UserDog.objects.get(user=user, dog=dog)
+            user_dog.status = 'd'
+            user_dog.save()
+            next_dog = get_single_dog(dogs, dog_id)
+            serializer = serializers.DogSerializer(next_dog)
+            return Response(serializer.data)
+        else:
+            raise Http404
 
         return HttpResponse('')

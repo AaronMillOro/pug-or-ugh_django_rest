@@ -33,6 +33,6 @@ class UserDog(models.Model):
 
 class UserPref(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    age = models.CharField(max_length=8, default='b')
-    gender = models.CharField(max_length=4, default='f')
-    size = models.CharField(max_length=9, default='xl')
+    age = models.CharField(max_length=8, default='b,y,a,s')
+    gender = models.CharField(max_length=4, default='m,f')
+    size = models.CharField(max_length=9, default='s,m,l,xl')
