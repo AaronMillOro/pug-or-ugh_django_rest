@@ -1,87 +1,78 @@
-# Pug or Ugh
+# Pug or Ugh Django API
 
-## Requirements
+## Context
 
-Create the models, serializers, and views to power the provided Angular
-application. You can check through the supplied JavaScript to see what
-resources should be available or check below. You are allowed to change,
-extend, and improve the JavaScript if desired, but the final result must still
-meet all of the required features/abilities.
+This project aims to allow **registered users** to search for **dogs** that are looking for a pet owner. Users can set up dog preferences (gender, age and/or size). Then, the dogs from the database are displayed and the user can classify them as: **liked, disliked** or **undecided**.
 
-You've been provided with HTML and CSS for a basic, mobile-friendly design.
-You've also been provided with a starter Django project and application, a
-serializer and views for authentication, and a bit more.
+The following project uses **Django REST framework** to connect models, serializers, and views with an Angular application (provided code). 
 
-## Starting
+HTML and CSS code has been provided for the mobile-friendly design. 
 
-Create a virtualenv and install the project requirements, which are listed in
-`requirements.txt`. The easiest way to do this is with `pip install -r
-requirements.txt` while your virtualenv is activated.
+An [import data script](https://github.com/AaronMillOro/pug-or-ugh_django_rest/blob/master/backend/pugorugh/scripts/data_import.py) allows to import **Dogs information** from a JSON file. To be used, `DogSerializer` and `Dog` model have to be properly declared.
 
-If you need to import dogs, a `data_import` script has been provided but it
-expects a `DogSerializer` and `Dog` model as outlined below to function
-properly.
+## Project details 
 
-## Models
+* Dogs information was imported usign  a `data_import` script: 
 
-The following models and associated field names should be present as they 
-will be expected by the JavaScript application.
+		python data_import.py
 
-* `Dog` - This model represents a dog in the app.
+* The following **models** and associated field names are present as they will be expected by the JavaScript application.
 
-	Fields:
+	* `Dog` - This model represents a dog in the app. Fields:
+		`name`
+		`image_filename`
+		`breed`
+		`age`, integer for months
+		`gender`, "m" for male, "f" for female, "u" for unknown
+		`size`, "s" for small, "m" for medium, "l" for large, "xl" for extra large, "u" for unknown
 
-	* `name`
-	* `image_filename`
-	* `breed`
-	* `age`, integer for months
-	* `gender`, "m" for male, "f" for female, "u" for unknown
-	* `size`, "s" for small, "m" for medium, "l" for large, "xl" for extra
-	  large, "u" for unknown
+	* `UserDog` -  This model represents a link between a user an a dog. Fields:
+		`user`
+		`dog`
+		`status`, "l" for liked, "d" for disliked
 
-* `UserDog` -  This model represents a link between a user an a dog
+	* `UserPref` - This model contains the user's preferences. Fields:
+		`user`
+		`age`, "b" for baby, "y" for young, "a" for adult, "s" for senior
+		`gender`, "m" for male, "f" for female
+		`size`, "s" for small, "m" for medium, "l" for large, "xl" for extra  large
 
-	Fields:
+		`age`, `gender`, and `size` can contain multiple, comma-separated values
 
-	* `user`
-	* `dog`
-	* `status`, "l" for liked, "d" for disliked
+* Serializers need to be created for both the `Dog` and `UserPref` models. Each of them should reveal all of the fields with one exception: the `UserPref` serializer doesn't need to reveal the user.
 
-* `UserPref` - This model contains the user's preferences
 
-	Fields:
+* The following routes are expected by the JavaScript application.
 
-	* `user`
-	* `age`, "b" for baby, "y" for young, "a" for adult, "s" for senior
-	* `gender`, "m" for male, "f" for female
-	* `size`, "s" for small, "m" for medium, "l" for large, "xl" for extra
-	  large
+	* To get the next liked/disliked/undecided dog
+		`/api/dog/<pk>/liked/next/`
+		`/api/dog/<pk>/disliked/next/`
+		`/api/dog/<pk>/undecided/next/`
 
-	`age`, `gender`, and `size` can contain multiple, comma-separated values
+	* To change the dog's status
+		`/api/dog/<pk>/liked/`
+		`/api/dog/<pk>/disliked/`
+		`/api/dog/<pk>/undecided/`
 
-## Serializers
+	* To change or set user preferences
+		`/api/user/preferences/`
 
-You'll need to provide serializers for both the `Dog` and `UserPref` models.
-Each of them should reveal all of the fields with one exception: the `UserPref`
-serializer doesn't need to reveal the user.
+## Test the app on terminal
 
-## Routes
+Create a virtualenv and install the project requirements, which are listed in `requirements.txt`. 
 
-The following routes are expected by the JavaScript application.
+		pipenv install
+		pipenv shell
+		pip install -r requirements.txt
 
-* To get the next liked/disliked/undecided dog
+Run the app.
 
-	* `/api/dog/<pk>/liked/next/`
-	* `/api/dog/<pk>/disliked/next/`
-	* `/api/dog/<pk>/undecided/next/`
+		python manage.py runserver 0.0.0.0:5000
+		
+Open your favorite web browser and type:
+		
+		http://localhost:50000/
+		
 
-* To change the dog's status
 
-	* `/api/dog/<pk>/liked/`
-	* `/api/dog/<pk>/disliked/`
-	* `/api/dog/<pk>/undecided/`
-
-* To change or set user preferences
-
-	* `/api/user/preferences/`
-
+Enjoy! :shipit:
