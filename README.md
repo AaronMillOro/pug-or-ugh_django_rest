@@ -19,25 +19,24 @@ An [import data script](https://github.com/AaronMillOro/pug-or-ugh_django_rest/b
 * The following **models** and associated field names are present as they will be expected by the JavaScript application.
 
 	* `Dog` - This model represents a dog in the app. Fields:
-		`name`
-		`image_filename`
-		`breed`
-		`age`, integer for months
-		`gender`, "m" for male, "f" for female, "u" for unknown
-		`size`, "s" for small, "m" for medium, "l" for large, "xl" for extra large, "u" for unknown
+		* `name`
+		* `image_filename`
+		* `breed`
+		* `age`, integer for months
+		* `gender`, "m" for male, "f" for female, "u" for unknown
+		* `size`, "s" for small, "m" for medium, "l" for large, "xl" for extra large, "u" for unknown
 
 	* `UserDog` -  This model represents a link between a user an a dog. Fields:
-		`user`
-		`dog`
-		`status`, "l" for liked, "d" for disliked
+		* `user`
+		* `dog`
+		* `status`, "l" for liked, "d" for disliked
 
 	* `UserPref` - This model contains the user's preferences. Fields:
-		`user`
-		`age`, "b" for baby, "y" for young, "a" for adult, "s" for senior
-		`gender`, "m" for male, "f" for female
-		`size`, "s" for small, "m" for medium, "l" for large, "xl" for extra  large
-
-		`age`, `gender`, and `size` can contain multiple, comma-separated values
+		* `user`
+		* `age`, "b" for baby, "y" for young, "a" for adult, "s" for senior
+		* `gender`, "m" for male, "f" for female
+		* `size`, "s" for small, "m" for medium, "l" for large, "xl" for extra  large
+		* `age`, `gender`, and `size` can contain multiple, comma-separated values
 
 * Serializers need to be created for both the `Dog` and `UserPref` models. Each of them should reveal all of the fields with one exception: the `UserPref` serializer doesn't need to reveal the user.
 
@@ -45,21 +44,21 @@ An [import data script](https://github.com/AaronMillOro/pug-or-ugh_django_rest/b
 * The following routes are expected by the JavaScript application.
 
 	* To get the next liked/disliked/undecided dog
-		`/api/dog/<pk>/liked/next/`
-		`/api/dog/<pk>/disliked/next/`
-		`/api/dog/<pk>/undecided/next/`
+		* `/api/dog/<pk>/liked/next/`
+		* `/api/dog/<pk>/disliked/next/`
+		* `/api/dog/<pk>/undecided/next/`
 
 	* To change the dog's status
-		`/api/dog/<pk>/liked/`
-		`/api/dog/<pk>/disliked/`
-		`/api/dog/<pk>/undecided/`
+		* `/api/dog/<pk>/liked/`
+		* `/api/dog/<pk>/disliked/`
+		* `/api/dog/<pk>/undecided/`
 
 	* To change or set user preferences
-		`/api/user/preferences/`
+		* `/api/user/preferences/`
 
 ## Test the app on terminal
 
-Create a virtualenv and install the project requirements, which are listed in `requirements.txt`. 
+Create a virtualenv and install the project requirements, which are listed in `requirements.txt`
 
 		pipenv install
 		pipenv shell
@@ -73,6 +72,6 @@ Open your favorite web browser and type:
 		
 		http://localhost:50000/
 		
-
+![Figure display](https://github.com/AaronMillOro/pug-or-ugh_django_rest/blob/master/Screenshot_pug_or_ugh.png)
 
 Enjoy! :shipit:
